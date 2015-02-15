@@ -1,0 +1,4 @@
+name = path2ban
+description = Ban IP of visitors, who try to scan restricted paths.
+core = 7.x
+

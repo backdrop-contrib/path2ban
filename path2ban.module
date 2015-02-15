@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * @file
+ * path2ban module.
+ *
+ * 
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function path2ban_menu() {
+  //TODO: make cofiguration form 
+  $paths = array(
+    'wp-login.php',
+    'wp-content',  //'wp-content/plugins/db-backup/download.php',
+    'wp-admin',  //'wp-admin/admin-ajax.php',
+    'bitrix',  //'bitrix/admin/index.php',
+    'administrator',  //'administrator/index.php',
+    'admin.php',
+    'admin/index.php',
+    'admin/login.php',
+    'backup.zip',
+  ); 
+ 
+  $menu = array();
+  foreach ($paths as $path) {
+    $menu[$path] = array(
+      'page callback' => 'path2ban_restricted_path',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+    );
+  }
+  return $menu;
+}
+
+/*
+ * This function register attacks, send notification emails to User One and ban IP adresses of web scanners.
+ */
+function path2ban_restricted_path() {
+  //TODO: use special (not e-mail related) variables
+  $limit = variable_get('contact_threshold_limit', 5);
+  $window = variable_get('contact_threshold_window', 3600);
+  
+  $ip = ip_address();
+  flood_register_event('path2ban'); // by default: $window=3600, $identifier=ip 
+
+  if (!flood_is_allowed('path2ban', $limit, $window)) { // by default: $window=3600
+    
+    db_insert('blocked_ips')
+      ->fields(array('ip' => $ip))
+      ->execute();
+    watchdog('path2ban', 'Banned IP address %ip', array('%ip' => $ip));
+    
+      // Notify user one.
+    $user1 = user_load(1);
+    $url = url('admin/config/people/ip-blocking', array('absolute' => TRUE));
+    $params['subject'] = variable_get('site_name') . t(': Blocked IP due to bruteforce attack');
+    $params['body'][] = t("Hi User One, 
+    There were suspected web scanner activities.
+    Associated IP (@ip) has been blocked.
+    You can review the list of blocked IPs at @url
+    Thank you.
+    Sent by path2ban module.
+    ", array('@ip' => $ip, '@url' => $url));
+    drupal_mail('userone', 'blocked-ip', $user1->mail, language_default(), $params);
+  }
+  drupal_access_denied();
+  drupal_exit(); 
+}
