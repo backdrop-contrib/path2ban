@@ -139,7 +139,15 @@ function path2ban_action() {
       Thank you.
       Sent by path2ban module. @testmode
       ", array('@ip' => $ip, '@url' => $url, '@testmode' => $testmode));
-      drupal_mail('userone', 'blocked-ip', $user1->mail, language_default(), $params);
+      //drupal_mail('path2ban', 'blocked-ip', $user1->mail, language_default(), $params);
+      drupal_mail('path2ban', 'blocked-ip', $user1->mail, user_preferred_language($user1), $params);
     }
   }
+}
+/*
+ * Implements hook_mail().
+ */
+function path2ban_mail($key, &$message, $params) {
+  $message['subject'] = $params['subject'];
+  $message['body'] = $params['body'];
 }
