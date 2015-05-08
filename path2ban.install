@@ -9,24 +9,33 @@
  * Implements hook_enable().
  */
 function path2ban_enable() {
-  $list = 'wp-login.php
-wp-content
-wp-admin
-bitrix
-administrator
+  $list = '
+wp-*
+bitrix*
+netcat*
+fck*
+components*
+www.zip
+backup.zip
+public_html.zip
+*.tar.gz
+
+administrator*
 admin.php
 admin/index.php
 admin/login.php
-backup.zip
-netcat
-manager
-www.tar.gz
-www.zip
-public_html.tar.gz
-public_html.zip
-backup.tar.gz
-backup.zip
-phpMyAdmin-*';
+
+sys*
+old*
+manage*
+editor*
+webadmin*
+phpMyAdmin*
+
+*.cgi
+cgi*
+wso*
+  ';
   variable_set('site_403', 'path2ban/403');
   variable_set('site_404', 'path2ban/404');
   variable_set('path2ban_list', variable_get('path2ban_list', $list));
