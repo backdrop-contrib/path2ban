@@ -6,40 +6,20 @@
  */
 
 /**
+ * This function prevents us from needing to have the same configuration 
+ * repeated multiple times.
+ */
+function path2ban_getDefaultPathsToBan() {
+  return file_get_contents(drupal_get_path('module', 'path2ban'). '/path2ban_default_entries.config');
+}
+
+/**
  * Implements hook_enable().
  */
 function path2ban_enable() {
-  $list = '
-wp-*
-bitrix*
-netcat*
-fck*
-components*
-www.zip
-backup.zip
-public_html.zip
-*.tar.gz
-
-administrator*
-admin.php
-admin/index.php
-admin/login.php
-
-sys*
-old*
-manage*
-editor*
-webadmin*
-phpMyAdmin*
-
-*.cgi
-cgi*
-wso*
-  ';
   variable_set('site_403', 'path2ban/403');
   variable_set('site_404', 'path2ban/404');
-  variable_set('path2ban_list', variable_get('path2ban_list', $list));
-
+  variable_set('path2ban_list', variable_get('path2ban_list', path2ban_getDefaultPathsToBan()));
 }
 
 /**
