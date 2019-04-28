@@ -9,7 +9,7 @@
  * This function prevents us from needing to have the same configuration 
  * repeated multiple times.
  */
-function path2ban_getDefaultPathsToBan() {
+function path2ban_get_default_paths_to_ban() {
   return file_get_contents(drupal_get_path('module', 'path2ban'). '/path2ban_default_entries.config');
 }
 
@@ -39,4 +39,44 @@ function path2ban_uninstall() {
   variable_del('path2ban_threshold_window');
   variable_del('path2ban_notify');
   variable_del('path2ban_test_mode');
+}
+
+/**
+ * Implements hook_update_N
+ */
+function path2ban_update_7101() {
+  // Add paths to prevent attacks encountered during Drupalgeddon 2.
+
+  $list = variable_get('path2ban_list', path2ban_get_default_paths_to_ban());
+  $list = $list . "\n";
+  $entriesToAdd = array(
+    'payload.php',
+'so.php',
+'formas.php',
+'aul.php',
+'rxr.php',
+'wp-caches.php',
+'sec.php',
+'alpha.php',
+'u.php',
+'searchreplacedb2.php',
+'d7.php',
+'_.php',
+'pplugins.php',
+
+'*.sql',
+'*.swf',
+'*config.php',
+'*.wsf',
+'*.ssh',
+  );
+
+  // Check that the user hasn't already added them before adding.
+  foreach($entriesToAdd as $eachEntryToAdd) {
+    if (NULL === strpos($list, $eachEntryToAdd)) {
+      $list .= $eachEntryToAdd . "\n";
+    }
+  }
+
+  variable_set('path2ban_list', $list);
 }
