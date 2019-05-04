@@ -10,7 +10,7 @@
  * repeated multiple times.
  */
 function path2ban_get_default_paths_to_ban() {
-  return file_get_contents(drupal_get_path('module', 'path2ban'). '/path2ban_default_entries.config');
+  return file_get_contents(drupal_get_path('module', 'path2ban') . '/path2ban_default_entries.config');
 }
 
 /**
@@ -19,7 +19,7 @@ function path2ban_get_default_paths_to_ban() {
 function path2ban_enable() {
   variable_set('site_403', 'path2ban/403');
   variable_set('site_404', 'path2ban/404');
-  variable_set('path2ban_list', variable_get('path2ban_list', path2ban_getDefaultPathsToBan()));
+  variable_set('path2ban_list', variable_get('path2ban_list', path2ban_get_default_paths_to_ban()));
 }
 
 /**
@@ -49,7 +49,7 @@ function path2ban_update_7101() {
 
   $list = variable_get('path2ban_list', path2ban_get_default_paths_to_ban());
   $list = $list . "\n";
-  $entriesToAdd = array(
+  $entries_to_add = array(
     'payload.php',
 'so.php',
 'formas.php',
@@ -72,9 +72,9 @@ function path2ban_update_7101() {
   );
 
   // Check that the user hasn't already added them before adding.
-  foreach($entriesToAdd as $eachEntryToAdd) {
-    if (NULL === strpos($list, $eachEntryToAdd)) {
-      $list .= $eachEntryToAdd . "\n";
+  foreach ($entries_to_add as $each_entry_to_add) {
+    if (NULL === strpos($list, $each_entry_to_add)) {
+      $list .= $each_entry_to_add . "\n";
     }
   }
 
