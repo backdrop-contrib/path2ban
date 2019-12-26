@@ -44,13 +44,13 @@ function path2ban_settings() {
   $form['path2ban_options']['path2ban_threshold_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Threshold limit'),
-    //'#description' => t('Please enter the ...'),
+    '#description' => t('The number of times an IP address can access restricted URLs during the threshold window before they are banned.'),
     '#default_value' => variable_get('path2ban_threshold_limit', 5),
   );
   $form['path2ban_options']['path2ban_threshold_window'] = array(
     '#type' => 'textfield',
     '#title' => t('Threshold window'),
-    '#description' => t('Please enter the threshold window in seconds'),
+    '#description' => t('The time period in which to consider attacks. 3600 seconds is one hour.'),
     '#default_value' => variable_get('path2ban_threshold_window', 3600),
   );
   $form['path2ban_options']['path2ban_notify'] = array(
@@ -69,10 +69,11 @@ function path2ban_settings() {
     '#type' => 'checkbox',
     '#title' => t('Use hooks'),
     '#default_value' => variable_get('path2ban_use_hooks', 0),
-    '#description' => t('This option will mean that path2ban still works even if
-      other modules use Drupal\'s 403 and 404 routes. There may be a reduction
-      in performance.<br>path2ban\'s maintainers are actively seeking feedback on
-      this change, and invite you to leave comments and feedback
+    '#description' => t('Selecting this opption means that path2ban still works
+      even if other modules, or your own configuration, uses Drupal\'s 403 and
+      404 routes. There may be a reduction in performance across your website.
+      <br>path2ban\'s maintainers are actively seeking feedback on this change,
+      and invite you to leave comments and feedback
       <a href=\'https://www.drupal.org/project/path2ban/issues/3103110\'>here</a>.'),
   );
   return system_settings_form($form);
@@ -108,7 +109,10 @@ function path2ban_menu() {
  */
 function path2ban_destination_check() {
   // Convert the Drupal path to lowercase.
-  $destination = drupal_strtolower($_GET['destination']);
+  $destination = '';
+  if (array_key_exists('destination', $_GET)) {
+    $destination = drupal_strtolower($_GET['destination']);
+  }
 
   // Don't accidentally error because of an empty string.
   if (empty($destination)) {
@@ -218,12 +222,12 @@ function path2ban_mail($key, &$message, $params) {
 }
 
 /**
- * Implements hook_page_alter()
+ * Implements hook_page_build()
  *
  * In this module's current implementation too many Drupal libraries are needed
  * for a lower order hook to be used.
  */
-function path2ban_page_alter() {
+function path2ban_page_build(&$page) {
   if (!variable_get('path2ban_use_hooks', 0)) {
     return;
   }
