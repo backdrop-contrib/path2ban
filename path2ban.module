@@ -6,6 +6,7 @@
  *
  *
  */
+
 /**
  * Implements hook_permission().
  */
@@ -103,7 +104,7 @@ function path2ban_menu() {
   return $menu;
 }
 
-/*
+/**
  * This function compare real path and restricted, and takes action if necessary.
  * @return bool whether path2ban action was taken.
  */
@@ -160,8 +161,8 @@ function path2ban_should_block_user() {
   }
 
   $bypass = (user_access('bypass path2ban')) ;
-  $window = intval (variable_get('path2ban_threshold_window', 3600));
-  $limit = intval (variable_get('path2ban_threshold_limit', 5));
+  $window = intval(variable_get('path2ban_threshold_window', 3600));
+  $limit = intval(variable_get('path2ban_threshold_limit', 5));
   $limit = ($limit < 1) ? 1 : $limit;
   //$testmode = variable_get('path2ban_test_mode', 0);
 
@@ -171,13 +172,13 @@ function path2ban_should_block_user() {
   }
 
   if (flood_is_allowed('path2ban', $limit, $window)) { // by default: $window=3600
-      return FALSE;
+    return FALSE;
   }
 
   // When flood_is_allowed returns false, the user has run out of chances.
   if ($bypass) {
-     watchdog('path2ban', 'Would have banned IP address %ip but they have the \'bypass path2ban\' role.', array('%ip' => $ip));
-     return FALSE;
+    watchdog('path2ban', 'Would have banned IP address %ip but they have the \'bypass path2ban\' role.', array('%ip' => $ip));
+    return FALSE;
   }
 
   return TRUE; // We should block the user.
@@ -193,7 +194,7 @@ function path2ban_block_user() {
     ->fields(array('ip' => $ip))
     ->execute();
   watchdog('path2ban', 'Banned IP address %ip', array('%ip' => $ip));
-  drupal_set_message(t('Sorry, your IP has been banned.'),'error');
+  drupal_set_message(t('Sorry, your IP has been banned.'), 'error');
 
   // Notify user one.
   if (variable_get('path2ban_notify', 0)) {
@@ -213,7 +214,8 @@ function path2ban_block_user() {
     drupal_mail('path2ban', 'blocked-ip', $user1->mail, user_preferred_language($user1), $params);
   }
 }
-/*
+
+/**
  * Implements hook_mail().
  */
 function path2ban_mail($key, &$message, $params) {
