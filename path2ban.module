@@ -122,16 +122,18 @@ function path2ban_action() {
   $ip = ip_address();
   flood_register_event('path2ban', $window); // by default: $window=3600, $identifier=ip 
   if ($bypass) {
-    drupal_set_message(t('Your IP has been logged by path2ban module.'), 'warning');
+    drupal_set_message(t('Your IP address has been logged.'), 'warning');
   }
   if (!flood_is_allowed('path2ban', $limit, $window)) { // by default: $window=3600
-  
-    drupal_set_message(t('Sorry, your IP has been banned.'),'error');
     if (!$bypass) {
       db_insert('blocked_ips')
         ->fields(array('ip' => $ip))
         ->execute();
       watchdog('path2ban', 'Banned IP address %ip', array('%ip' => $ip));
+      drupal_set_message(t('Sorry, your IP has been banned.'),'error');
+    }
+    else {
+      watchdog('path2ban', 'Would have banned IP address %ip but they have the \'bypass path2ban\' role.', array('%ip' => $ip));
     }
     // Notify user one. 
     if (variable_get('path2ban_notify', 0)) {
