@@ -4,7 +4,7 @@
  * @file
  * path2ban module.
  *
- * 
+ *
  */
 /**
  * Implements hook_permission().
@@ -20,7 +20,7 @@ function path2ban_permission() {
       'title' => t('Bypass path2ban'),
       'description' => t('path2ban will not block this role.'),
   );
-    return $permissions;  
+    return $permissions;
 }
 
 /**
@@ -79,8 +79,8 @@ function path2ban_menu() {
     'access callback' => TRUE,
     //'access arguments' => array('access content'), // TRUE - проверить
     'type' => MENU_CALLBACK,
-  ); 
-  
+  );
+
   $menu['admin/config/people/path2ban'] = array(
     'title' => 'path2ban',
     'description' => 'Ban IP of visitors, who try to scan restricted paths.',
@@ -120,7 +120,7 @@ function path2ban_action() {
   $limit = ($limit < 1) ? 1 : $limit;
   //$testmode = variable_get('path2ban_test_mode', 0);
   $ip = ip_address();
-  flood_register_event('path2ban', $window); // by default: $window=3600, $identifier=ip 
+  flood_register_event('path2ban', $window); // by default: $window=3600, $identifier=ip
   if ($bypass) {
     drupal_set_message(t('Your IP address has been logged.'), 'warning');
   }
@@ -131,26 +131,27 @@ function path2ban_action() {
         ->execute();
       watchdog('path2ban', 'Banned IP address %ip', array('%ip' => $ip));
       drupal_set_message(t('Sorry, your IP has been banned.'),'error');
+
+      // Notify user one.
+      if (variable_get('path2ban_notify', 0)) {
+        $user1 = user_load(1);
+        $testmode = ($bypass) ? t('(User has bypass permission. IP address has not been blocked!)'):'';
+        $url = url('admin/config/people/ip-blocking', array('absolute' => TRUE));
+        $params['subject'] = variable_get('site_name') . t(': Blocked IP due to web-scanner attack');
+        $params['body'][] = t("Hi User One,
+        There were suspected web-scanner activities.
+        Associated IP (@ip) has been blocked.
+        You can review the list of blocked IPs at @url
+        Thank you.
+        Sent by path2ban module.
+        @testmode
+        ", array('@ip' => $ip, '@url' => $url, '@testmode' => $testmode));
+        //drupal_mail('path2ban', 'blocked-ip', $user1->mail, language_default(), $params);
+        drupal_mail('path2ban', 'blocked-ip', $user1->mail, user_preferred_language($user1), $params);
+      }
     }
     else {
       watchdog('path2ban', 'Would have banned IP address %ip but they have the \'bypass path2ban\' role.', array('%ip' => $ip));
-    }
-    // Notify user one. 
-    if (variable_get('path2ban_notify', 0)) {
-      $user1 = user_load(1);
-      $testmode = ($bypass) ? t('(User has bypass permission. IP address has not been blocked!)'):'';
-      $url = url('admin/config/people/ip-blocking', array('absolute' => TRUE));
-      $params['subject'] = variable_get('site_name') . t(': Blocked IP due to web-scanner attack');
-      $params['body'][] = t("Hi User One, 
-      There were suspected web-scanner activities.
-      Associated IP (@ip) has been blocked.
-      You can review the list of blocked IPs at @url
-      Thank you.
-      Sent by path2ban module.
-      @testmode
-      ", array('@ip' => $ip, '@url' => $url, '@testmode' => $testmode));
-      //drupal_mail('path2ban', 'blocked-ip', $user1->mail, language_default(), $params);
-      drupal_mail('path2ban', 'blocked-ip', $user1->mail, user_preferred_language($user1), $params);
     }
   }
   global $user;
