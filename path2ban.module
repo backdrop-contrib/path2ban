@@ -65,6 +65,16 @@ function path2ban_settings() {
     '#default_value' => variable_get('path2ban_test_mode', 0),
     '#description' => t('Do not block any IP addresses'),
   );*/
+  $form['path2ban_options']['path2ban_use_hooks'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use hooks'),
+    '#default_value' => variable_get('path2ban_use_hooks', 0),
+    '#description' => t('This option will mean that path2ban still works even if
+      other modules use Drupal\'s 403 and 404 routes. There may be a reduction
+      in performance.<br>path2ban\'s maintainers are actively seeking feedback on
+      this change, and invite you to leave comments and feedback
+      <a href=\'https://www.drupal.org/project/path2ban/issues/3103110\'>here</a>.'),
+  );
   return system_settings_form($form);
 }
 
@@ -74,7 +84,7 @@ function path2ban_settings() {
 function path2ban_menu() {
   $menu = array();
   $menu['path2ban/%'] = array(
-    'page callback' => 'path2ban_pitfall',
+    'page callback' => 'path2ban_menu_callback',
     'page arguments' => array(1),
     'access callback' => TRUE,
     //'access arguments' => array('access content'), // TRUE - проверить
@@ -92,19 +102,36 @@ function path2ban_menu() {
   return $menu;
 }
 
-
 /*
- * This function compare real path and restricted.
+ * This function compare real path and restricted, and takes action if necessary.
+ * @return bool whether path2ban action was taken.
  */
-function path2ban_pitfall($state = 404) {
-  $pages = drupal_strtolower(variable_get('path2ban_list', ''));
+function path2ban_destination_check() {
   // Convert the Drupal path to lowercase.
   $destination = drupal_strtolower($_GET['destination']);
+
+  // Don't accidentally error because of an empty string.
+  if (empty($destination)) {
+    return FALSE;
+  }
+
   // Compare the lowercase paths.
+  $pages = drupal_strtolower(variable_get('path2ban_list', ''));
   $page_match = drupal_match_path($destination, $pages);
+
   if ($page_match) {
     path2ban_action();
+    return TRUE;
   }
+  return FALSE;
+}
+
+/**
+ * This menu_callback arrives from either the 403 or 404 responses, so it doesn't
+ * have to check if the path is valid.
+ */
+function path2ban_menu_callback($state = 404) {
+  path2ban_destination_check();
   // Return menu code
   $result = ($state == 403) ? MENU_ACCESS_DENIED : MENU_NOT_FOUND;
   return ($result);
@@ -165,4 +192,19 @@ function path2ban_action() {
 function path2ban_mail($key, &$message, $params) {
   $message['subject'] = $params['subject'];
   $message['body'] = $params['body'];
+}
+
+/**
+ * Implements hook_page_alter()
+ *
+ * In this module's current implementation too many Drupal libraries are needed
+ * for a lower order hook to be used.
+ */
+function path2ban_page_alter() {
+  if (!variable_get('path2ban_use_hooks', 0)) {
+    return;
+  }
+
+  path2ban_destination_check();
+  // No redirect needed, as it should just proceed to the 404 page.
 }
