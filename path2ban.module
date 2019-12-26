@@ -57,7 +57,7 @@ function path2ban_settings() {
     '#type' => 'checkbox',
     '#title' => t('Notify User One?'),
     '#default_value' => variable_get('path2ban_notify', 0),
-    '#description' => t('Notify User One by email about blocked IP addresses'),
+    '#description' => t('Notify User One by email about blocked IP addresses.'),
   );
 /*  $form['path2ban_options']['path2ban_test_mode'] = array(
     '#type' => 'checkbox',
@@ -119,11 +119,18 @@ function path2ban_destination_check() {
   $pages = drupal_strtolower(variable_get('path2ban_list', ''));
   $page_match = drupal_match_path($destination, $pages);
 
-  if ($page_match) {
-    path2ban_action();
-    return TRUE;
+  if (!$page_match) {
+    return FALSE;
   }
-  return FALSE;
+
+  $should_block_user = path2ban_should_block_user();
+
+  if (!$should_block_user) {
+    return FALSE;
+  }
+
+  path2ban_block_user();
+  return TRUE;
 }
 
 /**
@@ -137,14 +144,15 @@ function path2ban_menu_callback($state = 404) {
   return ($result);
 }
 
-/*
- * This function register attacks, send notification emails to User One and ban IP adresses of web scanners.
+/**
+ * Registers the infraction and considers blocking the user.
+ * @return bool true if should block the user.
  */
-function path2ban_action() {
+function path2ban_should_block_user() {
   global $user;
   if ($user->uid == 1) {
     drupal_set_message(t('Hi User One! Use another account and another IP for testing path2ban module. Your IP not banned.'));
-    return;
+    return FALSE;
   }
 
   $bypass = (user_access('bypass path2ban')) ;
@@ -159,15 +167,22 @@ function path2ban_action() {
   }
 
   if (flood_is_allowed('path2ban', $limit, $window)) { // by default: $window=3600
-      return;
+      return FALSE;
   }
 
   // When flood_is_allowed returns false, the user has run out of chances.
   if ($bypass) {
      watchdog('path2ban', 'Would have banned IP address %ip but they have the \'bypass path2ban\' role.', array('%ip' => $ip));
-     return;
+     return FALSE;
   }
 
+  return TRUE; // We should block the user.
+}
+
+/**
+ * This function bans IP addresses of web scanners and sends a notification email to User One.
+ */
+function path2ban_block_user() {
   // Actually ban.
   $ip = ip_address();
   db_insert('blocked_ips')
