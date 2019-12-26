@@ -1,4 +1,4 @@
 name = path2ban
-description = Ban IP of visitors, who try to scan restricted paths.
+description = Ban IP addresses of visitors who try to scan restricted paths.
 core = 7.x
 configure = admin/config/people/path2ban
