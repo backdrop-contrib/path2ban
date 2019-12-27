@@ -63,26 +63,26 @@ class Path2ban {
     $limit = ($limit < 1) ? 1 : $limit;
     //$testmode = variable_get('path2ban_test_mode', 0);
 
-    flood_register_event('path2ban', $window); // by default: $window=3600, $identifier=ip
     if ($bypass) {
-      drupal_set_message(t('Your IP address has been logged.'), 'warning');
-    }
-
-    if (flood_is_allowed('path2ban', $limit, $window)) { // by default: $window=3600
+      watchdog('path2ban', 'Permitting IP address %ip as they have the \'bypass path2ban\' role.', array('%ip' => ip_address()));
       return FALSE;
     }
 
+    flood_register_event('path2ban', $window); // by default: $window=3600, $identifier=ip
+
     // When flood_is_allowed returns false, the user has run out of chances.
-    if ($bypass) {
-    watchdog('path2ban', 'Would have banned IP address %ip but they have the \'bypass path2ban\' role.', array('%ip' => ip_address()));
-    return FALSE;
+    if (flood_is_allowed('path2ban', $limit, $window)) { // by default: $window=3600
+      if (variable_get('path2ban_warn_user')) {
+        drupal_set_message(t(variable_get('path2ban_warn_user_message')), 'warning');
+      }
+      return FALSE;
     }
 
     return TRUE; // We should block the user.
   }
 
   /**
-   * This function bans IP addresses of web scanners and sends a notification 
+   * This function bans IP addresses of web scanners and sends a notification
    * email to User One.
    */
   private static function block_user() {

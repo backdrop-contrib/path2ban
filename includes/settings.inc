@@ -38,16 +38,22 @@ function path2ban_settings() {
   );
   $form['path2ban_options']['path2ban_notify'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Notify User One?'),
+    '#title' => t('Notify user one?'),
     '#default_value' => variable_get('path2ban_notify', 0),
     '#description' => t('Notify User One by email about blocked IP addresses.'),
   );
-/*  $form['path2ban_options']['path2ban_test_mode'] = array(
+  $form['path2ban_options']['path2ban_warn_user'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Test mode'),
-    '#default_value' => variable_get('path2ban_test_mode', 0),
-    '#description' => t('Do not block any IP addresses'),
-  );*/
+    '#title' => t('Show warning message?'),
+    '#default_value' => variable_get('path2ban_warn_user', 0),
+    '#description' => t('Warns the user that they are attempting to access restricted paths, and may be IP banned.'),
+  );
+  $form['path2ban_options']['path2ban_warn_user_message'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Warning message'),
+    '#default_value' => variable_get('path2ban_warn_user_message', 'Access to this page is restricted.<br/>If you continue to attempt to access it you will be blocked from this website.'),
+    '#description' => t('The message to show the user if the "Warning message" box is checked.'),
+  );
   $form['path2ban_options']['path2ban_use_hooks'] = array(
     '#type' => 'checkbox',
     '#title' => t('Use hooks'),
