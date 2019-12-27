@@ -59,5 +59,54 @@ function path2ban_settings() {
       and invite you to leave comments and feedback
       <a href=\'https://www.drupal.org/project/path2ban/issues/3103110\'>here</a>.'),
   );
+
   return system_settings_form($form);
+}
+
+/**
+ * Implements hook_page_alter()
+ *
+ * If watchdog is available, includes the lists of recent 403 and 404 errors.
+ */
+function path2ban_page_alter(&$page) {
+  if ('admin/config/people/path2ban' !== $_GET['q']) {
+    return;
+  }
+
+  // Some sites disable watchdog.
+  if (!module_exists('dblog')) {
+    $page['content']['no_blog_warning'] = array(
+      '#markup' => '<div>On sites with Drupal watchdog enabled, we include a list
+        of recent 403 and 404 errors here. We recommend you review your operating
+        system\'s logs to discover new paths to restrict.</div><br/>',
+    );
+    return;
+  }
+
+  // At this point we know that watchdog is enabled.
+  module_load_include('inc', 'dblog', 'dblog.admin');
+
+  $page['content']['path2ban_error_list'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Recent 404 errors'),
+  );
+
+  $page['content']['path2ban_error_list']['intro'] = array(
+    '#markup' => '<div>This is a list of recent 404 errors from watchdog.
+      You can use these to decide which paths to restrict using the field above.
+      <br/><br/>
+      Occasionally legitimate visitors may get links wrong, or may
+      even attempt to find out what CMS you\'re using. Therefore it\'s
+      usually best not to block every item that appears in this list.<br/><br/>
+      In most cases it\'s probably best not to restrict visitors based on access
+      denied errors, as those can occur when users are automatically logged out,
+      but you can find a list of those
+      <a href="/admin/reports/access-denied">here</a>.</div><br/>',
+  );
+
+  $page['content']['path2ban_error_list']['404_header'] = array(
+    '#markup' => '<strong>404 errors</strong><br/>',
+   );
+
+  $page['content']['path2ban_error_list']['404_errors'] = dblog_top('page not found');
 }
