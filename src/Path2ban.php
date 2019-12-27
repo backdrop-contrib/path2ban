@@ -14,9 +14,10 @@ class Path2ban {
 
   /**
    * This function compare real path and restricted, and takes action if necessary.
+   *
    * @return bool whether path2ban action was taken.
    */
-  public static function destination_check() {
+  public static function destinationCheck() {
     // Convert the Drupal path to lowercase.
     $destination = '';
     if (array_key_exists('destination', $_GET)) {
@@ -36,56 +37,57 @@ class Path2ban {
       return FALSE;
     }
 
-    $should_block_user = self::should_block_user();
+    $should_block_user = self::shouldBlockUser();
 
     if (!$should_block_user) {
       return FALSE;
     }
 
-    self::block_user();
+    self::blockUser();
     return TRUE;
   }
 
   /**
    * Registers the infraction and considers blocking the user.
+   *
    * @return bool true if should block the user.
    */
-  private static function should_block_user() {
+  private static function shouldBlockUser() {
     global $user;
     if ($user->uid == 1) {
       drupal_set_message(t('Hi User One! Use another account and another IP for testing path2ban module. Your IP not banned.'));
       return FALSE;
     }
 
-    $bypass = (user_access('bypass path2ban')) ;
+    $bypass = (user_access('bypass path2ban'));
     $window = intval(variable_get('path2ban_threshold_window', 3600));
     $limit = intval(variable_get('path2ban_threshold_limit', 5));
     $limit = ($limit < 1) ? 1 : $limit;
-    //$testmode = variable_get('path2ban_test_mode', 0);
 
     if ($bypass) {
       watchdog('path2ban', 'Permitting IP address %ip as they have the \'bypass path2ban\' role.', array('%ip' => ip_address()));
       return FALSE;
     }
 
-    flood_register_event('path2ban', $window); // by default: $window=3600, $identifier=ip
+    flood_register_event('path2ban', $window);
 
     // When flood_is_allowed returns false, the user has run out of chances.
-    if (flood_is_allowed('path2ban', $limit, $window)) { // by default: $window=3600
+    if (flood_is_allowed('path2ban', $limit, $window)) {
       if (variable_get('path2ban_warn_user')) {
         drupal_set_message(t(variable_get('path2ban_warn_user_message')), 'warning');
       }
       return FALSE;
     }
-
-    return TRUE; // We should block the user.
+    
+    // We should block the user.
+    return TRUE;
   }
 
   /**
    * This function bans IP addresses of web scanners and sends a notification
    * email to User One.
    */
-  private static function block_user() {
+  private static function blockUser() {
     // Actually ban.
     $ip = ip_address();
     db_insert('blocked_ips')
@@ -106,8 +108,8 @@ class Path2ban {
         Thank you.
         Sent by path2ban module.
       ", array('@ip' => $ip, '@url' => $url));
-      //drupal_mail('path2ban', 'blocked-ip', $user1->mail, language_default(), $params);
       drupal_mail('path2ban', 'blocked-ip', $user1->mail, user_preferred_language($user1), $params);
     }
   }
+
 }

@@ -3,7 +3,6 @@
 /**
  * @file
  * path2ban module.
- *
  */
 
 module_load_include('inc', 'path2ban', 'includes/menu');
@@ -15,13 +14,12 @@ module_load_include('inc', 'path2ban', 'includes/settings');
 function path2ban_permission() {
   $permissions = array();
   $permissions['administer path2ban'] = array(
-      'title' => t('Administer path2ban'),
-      'description' => t('Administer path2ban configuration settings.'),
-      //'restrict access' => TRUE,
+    'title' => t('Administer path2ban'),
+    'description' => t('Administer path2ban configuration settings.'),
   );
   $permissions['bypass path2ban'] = array(
-      'title' => t('Bypass path2ban'),
-      'description' => t('path2ban will not block this role.'),
+    'title' => t('Bypass path2ban'),
+    'description' => t('path2ban will not block this role.'),
   );
   return $permissions;
 }
@@ -35,7 +33,7 @@ function path2ban_mail($key, &$message, $params) {
 }
 
 /**
- * Implements hook_page_build()
+ * Implements hook_page_build().
  *
  * In this module's current implementation too many Drupal libraries are needed
  * for a lower order hook to be used.
@@ -45,6 +43,6 @@ function path2ban_page_build(&$page) {
     return;
   }
 
-  Path2ban::destination_check();
+  Path2ban::destinationCheck();
   // No redirect needed, as it should just proceed to the 404 page.
 }

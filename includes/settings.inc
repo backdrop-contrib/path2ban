@@ -3,20 +3,21 @@
 /**
  * @file
  * path2ban settings file.
- *
  */
 
 /**
  * Display path2ban settings form.
  */
 function path2ban_settings() {
-  //TODO: hard and soft IP block
   $form = array();
   $form['path2ban_options'] = array(
     '#type' => 'fieldset',
     '#title' => t('path2ban options'),
   );
-  $description = t("Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>'));
+  $description = t(
+    "Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.",
+    array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>')
+  );
   $form['path2ban_options']['path2ban_list'] = array(
     '#type' => 'textarea',
     '#title' => t('List of restricted paths'),
@@ -70,7 +71,7 @@ function path2ban_settings() {
 }
 
 /**
- * Implements hook_page_alter()
+ * Implements hook_page_alter().
  *
  * If watchdog is available, includes the lists of recent 403 and 404 errors.
  */
@@ -112,7 +113,7 @@ function path2ban_page_alter(&$page) {
 
   $page['content']['path2ban_error_list']['404_header'] = array(
     '#markup' => '<strong>404 errors</strong><br/>',
-   );
+  );
 
   $page['content']['path2ban_error_list']['404_errors'] = dblog_top('page not found');
 }

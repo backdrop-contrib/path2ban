@@ -3,7 +3,6 @@
 /**
  * @file
  * path2ban menu file.
- *
  */
 
 /**
@@ -15,7 +14,6 @@ function path2ban_menu() {
     'page callback' => 'path2ban_menu_callback',
     'page arguments' => array(1),
     'access callback' => TRUE,
-    //'access arguments' => array('access content'), // TRUE - проверить
     'type' => MENU_CALLBACK,
   );
 
@@ -35,8 +33,8 @@ function path2ban_menu() {
  * have to check if the path is valid.
  */
 function path2ban_menu_callback($state = 404) {
-  Path2ban::destination_check();
-  // Return menu code
+  Path2ban::destinationCheck();
+  // Return menu code.
   $result = ($state == 403) ? MENU_ACCESS_DENIED : MENU_NOT_FOUND;
   return ($result);
 }
