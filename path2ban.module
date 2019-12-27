@@ -4,8 +4,10 @@
  * @file
  * path2ban module.
  *
- *
  */
+
+module_load_include('inc', 'path2ban', 'includes/menu');
+module_load_include('inc', 'path2ban', 'includes/settings');
 
 /**
  * Implements hook_permission().
@@ -21,198 +23,7 @@ function path2ban_permission() {
       'title' => t('Bypass path2ban'),
       'description' => t('path2ban will not block this role.'),
   );
-    return $permissions;
-}
-
-/**
- * Display path2ban settings form.
- */
-function path2ban_settings() {
-  //TODO: hard and soft IP block
-  $form = array();
-  $form['path2ban_options'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('path2ban options'),
-  );
-  $description = t("Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>'));
-  $form['path2ban_options']['path2ban_list'] = array(
-    '#type' => 'textarea',
-    '#title' => t('List of restricted paths'),
-    '#description' => $description,
-    '#default_value' => variable_get('path2ban_list', ''),
-    '#rows' => 25,
-  );
-  $form['path2ban_options']['path2ban_threshold_limit'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Threshold limit'),
-    '#description' => t('The number of times an IP address can access restricted URLs during the threshold window before they are banned.'),
-    '#default_value' => variable_get('path2ban_threshold_limit', 5),
-  );
-  $form['path2ban_options']['path2ban_threshold_window'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Threshold window'),
-    '#description' => t('The time period in which to consider attacks. 3600 seconds is one hour.'),
-    '#default_value' => variable_get('path2ban_threshold_window', 3600),
-  );
-  $form['path2ban_options']['path2ban_notify'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Notify User One?'),
-    '#default_value' => variable_get('path2ban_notify', 0),
-    '#description' => t('Notify User One by email about blocked IP addresses.'),
-  );
-/*  $form['path2ban_options']['path2ban_test_mode'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Test mode'),
-    '#default_value' => variable_get('path2ban_test_mode', 0),
-    '#description' => t('Do not block any IP addresses'),
-  );*/
-  $form['path2ban_options']['path2ban_use_hooks'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Use hooks'),
-    '#default_value' => variable_get('path2ban_use_hooks', 0),
-    '#description' => t('Selecting this opption means that path2ban still works
-      even if other modules, or your own configuration, uses Drupal\'s 403 and
-      404 routes. There may be a reduction in performance across your website.
-      <br>path2ban\'s maintainers are actively seeking feedback on this change,
-      and invite you to leave comments and feedback
-      <a href=\'https://www.drupal.org/project/path2ban/issues/3103110\'>here</a>.'),
-  );
-  return system_settings_form($form);
-}
-
-/**
- * Implements hook_menu().
- */
-function path2ban_menu() {
-  $menu = array();
-  $menu['path2ban/%'] = array(
-    'page callback' => 'path2ban_menu_callback',
-    'page arguments' => array(1),
-    'access callback' => TRUE,
-    //'access arguments' => array('access content'), // TRUE - проверить
-    'type' => MENU_CALLBACK,
-  );
-
-  $menu['admin/config/people/path2ban'] = array(
-    'title' => 'path2ban',
-    'description' => 'Ban IP of visitors, who try to scan restricted paths.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('path2ban_settings'),
-    'access arguments' => array('administer path2ban'),
-    'type' => MENU_NORMAL_ITEM,
-  );
-  return $menu;
-}
-
-/**
- * This function compare real path and restricted, and takes action if necessary.
- * @return bool whether path2ban action was taken.
- */
-function path2ban_destination_check() {
-  // Convert the Drupal path to lowercase.
-  $destination = '';
-  if (array_key_exists('destination', $_GET)) {
-    $destination = drupal_strtolower($_GET['destination']);
-  }
-
-  // Don't accidentally error because of an empty string.
-  if (empty($destination)) {
-    return FALSE;
-  }
-
-  // Compare the lowercase paths.
-  $pages = drupal_strtolower(variable_get('path2ban_list', ''));
-  $page_match = drupal_match_path($destination, $pages);
-
-  if (!$page_match) {
-    return FALSE;
-  }
-
-  $should_block_user = path2ban_should_block_user();
-
-  if (!$should_block_user) {
-    return FALSE;
-  }
-
-  path2ban_block_user();
-  return TRUE;
-}
-
-/**
- * This menu_callback arrives from either the 403 or 404 responses, so it doesn't
- * have to check if the path is valid.
- */
-function path2ban_menu_callback($state = 404) {
-  path2ban_destination_check();
-  // Return menu code
-  $result = ($state == 403) ? MENU_ACCESS_DENIED : MENU_NOT_FOUND;
-  return ($result);
-}
-
-/**
- * Registers the infraction and considers blocking the user.
- * @return bool true if should block the user.
- */
-function path2ban_should_block_user() {
-  global $user;
-  if ($user->uid == 1) {
-    drupal_set_message(t('Hi User One! Use another account and another IP for testing path2ban module. Your IP not banned.'));
-    return FALSE;
-  }
-
-  $bypass = (user_access('bypass path2ban')) ;
-  $window = intval(variable_get('path2ban_threshold_window', 3600));
-  $limit = intval(variable_get('path2ban_threshold_limit', 5));
-  $limit = ($limit < 1) ? 1 : $limit;
-  //$testmode = variable_get('path2ban_test_mode', 0);
-
-  flood_register_event('path2ban', $window); // by default: $window=3600, $identifier=ip
-  if ($bypass) {
-    drupal_set_message(t('Your IP address has been logged.'), 'warning');
-  }
-
-  if (flood_is_allowed('path2ban', $limit, $window)) { // by default: $window=3600
-    return FALSE;
-  }
-
-  // When flood_is_allowed returns false, the user has run out of chances.
-  if ($bypass) {
-    watchdog('path2ban', 'Would have banned IP address %ip but they have the \'bypass path2ban\' role.', array('%ip' => $ip));
-    return FALSE;
-  }
-
-  return TRUE; // We should block the user.
-}
-
-/**
- * This function bans IP addresses of web scanners and sends a notification email to User One.
- */
-function path2ban_block_user() {
-  // Actually ban.
-  $ip = ip_address();
-  db_insert('blocked_ips')
-    ->fields(array('ip' => $ip))
-    ->execute();
-  watchdog('path2ban', 'Banned IP address %ip', array('%ip' => $ip));
-  drupal_set_message(t('Sorry, your IP has been banned.'), 'error');
-
-  // Notify user one.
-  if (variable_get('path2ban_notify', 0)) {
-    $user1 = user_load(1);
-    $testmode = ($bypass) ? t('(User has bypass permission. IP address has not been blocked!)'):'';
-    $url = url('admin/config/people/ip-blocking', array('absolute' => TRUE));
-    $params['subject'] = variable_get('site_name') . t(': Blocked IP due to web-scanner attack');
-    $params['body'][] = t("Hi User One,
-    There were suspected web-scanner activities.
-    Associated IP (@ip) has been blocked.
-    You can review the list of blocked IPs at @url
-    Thank you.
-    Sent by path2ban module.
-    @testmode
-    ", array('@ip' => $ip, '@url' => $url, '@testmode' => $testmode));
-    //drupal_mail('path2ban', 'blocked-ip', $user1->mail, language_default(), $params);
-    drupal_mail('path2ban', 'blocked-ip', $user1->mail, user_preferred_language($user1), $params);
-  }
+  return $permissions;
 }
 
 /**
@@ -234,6 +45,6 @@ function path2ban_page_build(&$page) {
     return;
   }
 
-  path2ban_destination_check();
+  Path2ban::destination_check();
   // No redirect needed, as it should just proceed to the 404 page.
 }
