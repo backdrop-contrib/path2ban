@@ -41,7 +41,7 @@ function path2ban_settings() {
     '#type' => 'checkbox',
     '#title' => t('Notify user one?'),
     '#default_value' => variable_get('path2ban_notify', 0),
-    '#description' => t('Notify User One by email about blocked IP addresses.'),
+    '#description' => t('Notify user one by email about blocked IP addresses.'),
   );
   $form['path2ban_options']['path2ban_warn_user'] = array(
     '#type' => 'checkbox',
@@ -61,7 +61,8 @@ function path2ban_settings() {
     '#default_value' => variable_get('path2ban_use_hooks', 0),
     '#description' => t('Selecting this opption means that path2ban still works
       even if other modules, or your own configuration, uses Drupal\'s 403 and
-      404 routes. There may be a reduction in performance across your website.
+      404 routes.<br/>If you enable this, don\'t forget to change those 403 and 404
+      options <a href="/admin/config/system/site-information">here</a>.
       <br>path2ban\'s maintainers are actively seeking feedback on this change,
       and invite you to leave comments and feedback
       <a href=\'https://www.drupal.org/project/path2ban/issues/3103110\'>here</a>.'),
