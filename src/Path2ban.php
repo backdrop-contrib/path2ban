@@ -74,11 +74,11 @@ class Path2ban {
     // When flood_is_allowed returns false, the user has run out of chances.
     if (flood_is_allowed('path2ban', $limit, $window)) {
       if (variable_get('path2ban_warn_user')) {
-        drupal_set_message(t(variable_get('path2ban_warn_user_message')), 'warning');
+        drupal_set_message(variable_get('path2ban_warn_user_message'), 'warning');
       }
       return FALSE;
     }
-    
+
     // We should block the user.
     return TRUE;
   }
@@ -110,6 +110,25 @@ class Path2ban {
       ", array('@ip' => $ip, '@url' => $url));
       drupal_mail('path2ban', 'blocked-ip', $user1->mail, user_preferred_language($user1), $params);
     }
+  }
+
+  /**
+   * A utility function to add new entries to the restricted paths list.
+   *
+   * @param array $new_entries
+   */
+  public static function addNewEntries($new_entries) {
+    $list = variable_get('path2ban_list', path2ban_get_default_paths_to_ban());
+    $list = $list . "\n";
+
+    // Check that the user hasn't already added them before adding.
+    foreach ($new_entries as $each_new_entry) {
+      if (FALSE === strpos($list, $each_new_entry)) {
+        $list .= $each_new_entry . "\n";
+      }
+    }
+
+    variable_set('path2ban_list', $list);
   }
 
 }

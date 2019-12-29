@@ -43,11 +43,11 @@ function path2ban_uninstall() {
 
 /**
  * Implements hook_update_N().
+ *
+ * Add paths to prevent attacks encountered during Drupalgeddon 2. Review before
+ * use at the path2ban config page.
  */
 function path2ban_update_7101() {
-  // Add paths to prevent attacks encountered during Drupalgeddon 2.
-  $list = variable_get('path2ban_list', path2ban_get_default_paths_to_ban());
-  $list = $list . "\n";
   $entries_to_add = array(
     'payload.php',
     'so.php',
@@ -70,12 +70,35 @@ function path2ban_update_7101() {
     '*.ssh',
   );
 
-  // Check that the user hasn't already added them before adding.
-  foreach ($entries_to_add as $each_entry_to_add) {
-    if (NULL === strpos($list, $each_entry_to_add)) {
-      $list .= $each_entry_to_add . "\n";
-    }
-  }
+  Path2ban::addNewEntries($entries_to_add);
+}
 
-  variable_set('path2ban_list', $list);
+/**
+ * Implements hook_update_N().
+ *
+ * Added some suggestions from toriah at
+ * https://www.drupal.org/project/path2ban/issues/2456909. Review before use at
+ * the path2ban config page.
+ */
+function path2ban_update_7201() {
+  $entries_to_add = array(
+    'wp/wp-*',
+    'wordpress/wp-*',
+
+    '*.asp',
+    '*.cgi',
+    '*.jsp',
+    '*.inc.php',
+    '*.php.html',
+    '*.phps',
+
+    '*UNION ALL SELECT*',
+    '*SELECT DBMS_PIPE.RECEIVE_MESSAGE*',
+    '*SELECT SLEEP(*',
+    '*SELECT PG_SLEEP(*',
+    '*(SELECT (*',
+    '*SELECT COUNT(*',
+  );
+
+  Path2ban::addNewEntries($entries_to_add);
 }
