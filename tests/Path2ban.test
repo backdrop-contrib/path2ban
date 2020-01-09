@@ -2,10 +2,11 @@
 
 /**
  * @file
+ * Path2ban tests.
  */
 
 /**
- * @class
+ * @class Contains Path2ban tests.
  */
 class Path2banTests extends DrupalWebTestCase {
 
@@ -22,16 +23,63 @@ class Path2banTests extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Path2ban unit tests',
-      'description' => 'Test Path2ban core functionality.',
+      'description' => 'Test Path2ban\'s core functionality.',
       'group' => 'Path2ban',
     );
   }
 
   /**
-   * Tests the destinationCheck function.
+   * Contained in tests for blocking by both the 404 page and the hook.
    */
-  public function testDestinationCheck() {
+  private function coreTestUserGetsBlocked() {
+    variable_set('path2ban_threshold_window', 3600);
+    variable_set('path2ban_threshold_limit', 1);
+    variable_set('path2ban_notify', 0);
 
+    // Array of the form 'setting' => 'path to test'.
+    $setting_path_map = array(
+      'admin/*' => 'admin/login.php',
+      'public_html.zip' => 'public_html.zip',
+      '*.tar.gz' => 'test.tar.gz',
+      '*.tar.gz' => 'backups/test.tar.gz',
+      'wp-*' => 'wp-login.php',
+      'wp-login.php' => 'wp-login.php',
+      'wordpress/wp-*' => 'wordpress/wp-login.php',
+    );
+
+    // Test each setting.
+    foreach ($setting_path_map as $path2ban_setting => $path_to_test) {
+      variable_set('path2ban_list', $path2ban_setting);
+
+      $this->drupalGet($path_to_test);
+
+      // At this point, the user should be blocked.
+      $ip_is_blocked = db_select('blocked_ips')->fields('blocked_ips', array('ip'))->execute()->fetchAssoc();
+      $this->assertEqual('127.0.0.1', $ip_is_blocked['ip']);
+
+      // Clear out the blocked IP so we can repeat the test.
+      db_truncate('blocked_ips');
+    }
+  }
+
+  /**
+   * An end to end test of the Path2ban functionality using the 404 page.
+   */
+  public function testUserGetsBlockedUsing404() {
+    variable_set('path2ban_use_hooks', 0);
+    variable_set('site_403', 'path2ban/403');
+    variable_set('site_404', 'path2ban/404');
+    $this->coreTestUserGetsBlocked();
+  }
+
+  /**
+   * An end to end test of the Path2ban functionality using the hook.
+   */
+  public function testUserGetsBlockedUsingHook() {
+    variable_set('path2ban_use_hooks', 1);
+    variable_set('site_403', '');
+    variable_set('site_404', '');
+    $this->coreTestUserGetsBlocked();
   }
 
   /**
