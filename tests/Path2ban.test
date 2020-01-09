@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ */
+
+/**
+ * @class
+ */
+class Path2banTests extends DrupalWebTestCase {
+
+  /**
+   * Standard function to provide text for the Web Interface.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Path2ban unit tests',
+      'description' => 'Test Path2ban core functionality.',
+      'group' => 'Path2ban',
+    );
+  }
+
+  /**
+   * Tests the destinationCheck function.
+   */
+  public function testDestinationCheck() {
+
+  }
+
+  /**
+   * Tests the addNewEntries function.
+   */
+  public function testAddNewEntries() {
+
+  }
+
+}

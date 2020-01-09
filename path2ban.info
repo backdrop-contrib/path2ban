@@ -3,4 +3,8 @@ description = Ban IP addresses of users or bots who try to access restricted pat
 core = 7.x
 configure = admin/config/people/path2ban
 version = "7.x-2.1"
+
 files[] = src/Path2ban.php
+
+testing_api = 2.x
+files[] = tests/Path2ban.test
