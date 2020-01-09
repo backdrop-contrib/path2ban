@@ -10,6 +10,13 @@
 class Path2banTests extends DrupalWebTestCase {
 
   /**
+   * Make sure the path2ban module functionality is available.
+   */
+  public function setUp() {
+    parent::setUp('path2ban');
+  }
+
+  /**
    * Standard function to provide text for the Web Interface.
    */
   public static function getInfo() {
@@ -31,7 +38,13 @@ class Path2banTests extends DrupalWebTestCase {
    * Tests the addNewEntries function.
    */
   public function testAddNewEntries() {
+    variable_set('path2ban_list', '');
+    Path2ban::addNewEntries(array('new_entry'));
+    $this->assertEqual("\nnew_entry\n", variable_get('path2ban_list'));
 
+    // Test for multiple additions, and that capitals get lower cased.
+    Path2ban::addNewEntries(array('new_entry', 'new_entry', 'new_entry'));
+    $this->assertEqual("\nnew_entry\n\n", variable_get('path2ban_list'));
   }
 
 }
