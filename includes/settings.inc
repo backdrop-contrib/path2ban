@@ -10,6 +10,17 @@
  */
 function path2ban_settings() {
   $form = array();
+
+  $banned_count = intval(variable_get('path2ban_banned_count', 0));
+  $banned_since = format_date(variable_get('path2ban_banned_since', '[run the database update]'), 'medium');
+
+  $form['path2ban_ban_count'] = array(
+    '#markup' => t(
+      'Path2ban has banned @banned_count visitors since @banned_since.',
+      array('@banned_count' => $banned_count, '@banned_since' => $banned_since)
+    ),
+  );
+
   $form['path2ban_options'] = array(
     '#type' => 'fieldset',
     '#title' => t('path2ban options'),
@@ -81,6 +92,10 @@ function path2ban_page_alter(&$page) {
     return;
   }
 
+  if (!user_access('administer path2ban')) {
+    return;
+  }
+  
   // Some sites disable watchdog.
   if (!module_exists('dblog')) {
     $page['content']['no_blog_warning'] = array(

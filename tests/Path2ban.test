@@ -29,6 +29,29 @@ class Path2banTests extends DrupalWebTestCase {
   }
 
   /**
+   * Test a single visit to a given path.
+   *
+   * @param string $path2ban_setting
+   * @param string $path_to_test
+   *
+   * @return bool $user_was_blocked
+   */
+  private function singleTestUserGetsBlocked($path2ban_setting, $path_to_test) {
+    variable_set('path2ban_list', $path2ban_setting);
+
+    $this->drupalGet($path_to_test);
+
+    // At this point, the user should be blocked.
+    $ip_is_blocked = db_select('blocked_ips')->fields('blocked_ips', array('ip'))->execute()->fetchAssoc();
+    $user_was_blocked = ('127.0.0.1' == $ip_is_blocked['ip']);
+
+    // Clear out the blocked IP so we can repeat the test.
+    db_delete('blocked_ips')->execute();
+
+    return $user_was_blocked;
+  }
+
+  /**
    * Contained in tests for blocking by both the 404 page and the hook.
    */
   private function coreTestUserGetsBlocked() {
@@ -49,16 +72,7 @@ class Path2banTests extends DrupalWebTestCase {
 
     // Test each setting.
     foreach ($setting_path_map as $path2ban_setting => $path_to_test) {
-      variable_set('path2ban_list', $path2ban_setting);
-
-      $this->drupalGet($path_to_test);
-
-      // At this point, the user should be blocked.
-      $ip_is_blocked = db_select('blocked_ips')->fields('blocked_ips', array('ip'))->execute()->fetchAssoc();
-      $this->assertEqual('127.0.0.1', $ip_is_blocked['ip']);
-
-      // Clear out the blocked IP so we can repeat the test.
-      db_truncate('blocked_ips');
+      $this->assertTrue($this->singleTestUserGetsBlocked($path2ban_setting, $path_to_test));
     }
   }
 
@@ -80,6 +94,26 @@ class Path2banTests extends DrupalWebTestCase {
     variable_set('site_403', '');
     variable_set('site_404', '');
     $this->coreTestUserGetsBlocked();
+  }
+
+  /**
+   * Test the path2ban_count variable increases on each ban.
+   */
+  public function testBannedCountIncrease() {
+    variable_set('path2ban_threshold_window', 3600);
+    variable_set('path2ban_threshold_limit', 1);
+    variable_set('path2ban_notify', 0);
+    variable_set('path2ban_use_hooks', 1);
+    variable_set('site_403', '');
+    variable_set('site_404', '');
+
+    variable_set('path2ban_banned_count', 0);
+
+    $this->assertTrue($this->singleTestUserGetsBlocked('wp-login.php', 'wp-login.php'));
+    $this->assertTrue($this->singleTestUserGetsBlocked('wp-login.php', 'wp-login.php'));
+    $this->assertTrue($this->singleTestUserGetsBlocked('wp-login.php', 'wp-login.php'));
+
+    $this->assertEqual(3, variable_get('path2ban_banned_count'));
   }
 
   /**

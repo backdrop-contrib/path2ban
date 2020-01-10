@@ -94,6 +94,9 @@ class Path2ban {
       ->fields(array('ip' => $ip))
       ->execute();
     watchdog('path2ban', 'Banned IP address %ip', array('%ip' => $ip));
+
+    variable_set('path2ban_banned_count', variable_get('path2ban_banned_count', 0) + 1);
+
     drupal_set_message(t('Sorry, your IP has been banned.'), 'error');
 
     // Notify user one.
