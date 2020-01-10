@@ -38,7 +38,9 @@ function path2ban_uninstall() {
   variable_del('path2ban_threshold_limit');
   variable_del('path2ban_threshold_window');
   variable_del('path2ban_notify');
-  variable_del('path2ban_test_mode');
+  variable_del('path2ban_warn_user');
+  variable_del('path2ban_warn_user_message');
+  variable_del('path2ban_use_hooks');
 }
 
 /**
@@ -98,6 +100,22 @@ function path2ban_update_7201() {
     '*SELECT PG_SLEEP(*',
     '*(SELECT (*',
     '*SELECT COUNT(*',
+  );
+
+  Path2ban::addNewEntries($entries_to_add);
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Add additional security settings.
+ * Deletes the now defunct variable 'path2ban_test_mode'.
+ */
+function path2ban_update_7202() {
+  variable_del('path2ban_test_mode');
+
+  $entries_to_add = array(
+    '.settings.php.swp',
   );
 
   Path2ban::addNewEntries($entries_to_add);
