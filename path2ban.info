@@ -2,7 +2,7 @@ name = path2ban
 description = Ban IP addresses of users or bots who try to access restricted paths.
 core = 7.x
 configure = admin/config/people/path2ban
-version = "7.x-2.1"
+version = "7.x-2.2"
 
 files[] = src/Path2ban.php
 
