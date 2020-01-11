@@ -117,6 +117,29 @@ class Path2banTests extends DrupalWebTestCase {
   }
 
   /**
+   * Test that users don't get banned for visiting valid paths even if they are
+   * in the configuration.
+   */
+  public function testDontBanValidPaths() {
+    variable_set('path2ban_use_hooks', 1);
+    variable_set('site_403', '');
+    variable_set('site_404', '');
+
+    variable_set('path2ban_banned_count', 0);
+
+    $setting_path_map = array(
+      'user/*' => 'user/login',
+      'admin/*' => 'admin/config',
+      'node/*' => 'node/1',
+    );
+
+    foreach($setting_path_map as $path2ban_setting => $path_to_test) {
+      $this->singleTestUserGetsBlocked($path2ban_setting, $path_to_test);
+      $this->assertEqual(0, variable_get('path2ban_banned_count'));
+    }
+  }
+
+  /**
    * Tests the addNewEntries function.
    */
   public function testAddNewEntries() {
