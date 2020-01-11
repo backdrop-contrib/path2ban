@@ -134,3 +134,21 @@ function path2ban_update_7202() {
 
   Path2ban::addNewEntries($entries_to_add);
 }
+
+/**
+ * Implements hook_update_N().
+ *
+ * Adds additional security settings.
+ */
+function path2ban_update_7203() {
+  $entries_to_add = array(
+    'elrekt.php',
+    '_adminer',
+    '_adminer.php',
+    'accesson.php',
+    'agentui.php',
+    '*.settings.php.swp',
+  );
+
+  Path2ban::addNewEntries($entries_to_add);
+}
