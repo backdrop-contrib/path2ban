@@ -46,3 +46,12 @@ function path2ban_page_build(&$page) {
   Path2ban::destinationCheck();
   // No redirect needed, as it should just proceed to the 404 page.
 }
+
+/**
+ * Implements hook_requirements.
+ */
+function path2ban_requirements($phase) {
+  if ('runtime' == $phase) {
+    return Path2ban_SettingsManager::checkRuntimeRequirements();
+  }
+}

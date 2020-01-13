@@ -96,4 +96,55 @@ abstract class Path2ban_SettingsManager {
 
   }
 
+  /**
+   * Check to ensure that there's always a mode selected, and if that mode is
+   * the menu callback that it has the correct callback paths.
+   */
+  public static function checkRuntimeRequirements() {
+
+    $mode = variable_get('path2ban_mode');
+
+    $return_values = array('path2ban_mode_check' => array('title' => 'Path2ban mode'));
+
+    if (self::MODE_USE_HOOK == $mode) {
+      $return_values['path2ban_mode_check']['value'] = t('Hook mode selected');
+      $return_values['path2ban_mode_check']['severity'] = REQUIREMENT_OK;
+    }
+    elseif (self::MODE_USE_MENU_CALLBACK == $mode) {
+      $return_values['path2ban_mode_check']['value'] = t('Menu callback mode selected');
+      $return_values['path2ban_mode_check']['severity'] = REQUIREMENT_OK;
+
+      // Check the site_403 and site_404 variables.
+      $site_current_403 = variable_get('site_403');
+      $site_current_404 = variable_get('site_404');
+
+      $value = t('site_403: :site_current_403 site_404: :site_current_404',
+        array(
+          ':site_current_403' => $site_current_403,
+          ':site_current_404' => $site_current_404,
+        )
+      );
+
+      $return_values['path2ban_menu_callback_check'] = array(
+        'title' => t('Path2ban menu callback settings'),
+        'value' => $value,
+      );
+
+      if ($site_current_403 == 'path2ban/403' && $site_current_404 == 'path2ban/404') {
+        $return_values['path2ban_menu_callback_check']['severity'] = REQUIREMENT_OK;
+      }
+      else {
+        $return_values['path2ban_menu_callback_check']['description'] = t('For Path2ban to work in menu callback mode, the site_403 and site_404 settings <a href="/admin/config/system/site-information">here</a> must be set to \'path2ban/403\' and \'path2ban/404\'.<br/>Alternatively switch Path2ban to \'use hook\' on the Path2ban <a href="/admin/config/people/path2ban">config page</a>.');
+        $return_values['path2ban_menu_callback_check']['severity'] = REQUIREMENT_ERROR;
+      }
+    }
+    else {
+      $return_values['path2ban_mode_check']['value'] = t('Invalid mode setting');
+      $return_values['path2ban_mode_check']['description'] = t('Path2ban doesn\'t currently have a valid mode selected. To resolve this, select a mode on the Path2ban <a href="/admin/config/people/path2ban">config page</a>.');
+      $return_values['path2ban_mode_check']['severity'] = REQUIREMENT_ERROR;
+    }
+
+    return $return_values;
+  }
+
 }
