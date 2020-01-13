@@ -10,7 +10,7 @@
  * The Path2ban class contains the core functionality to assess and block
  * visitors who violate rules.
  */
-class Path2ban {
+abstract class Path2ban {
 
   /**
    * This function compare real path and restricted, and takes action if necessary.
@@ -113,25 +113,6 @@ class Path2ban {
       ", array('@ip' => $ip, '@url' => $url));
       drupal_mail('path2ban', 'blocked-ip', $user1->mail, user_preferred_language($user1), $params);
     }
-  }
-
-  /**
-   * A utility function to add new entries to the restricted paths list.
-   *
-   * @param array $new_entries
-   */
-  public static function addNewEntries($new_entries) {
-    $list = variable_get('path2ban_list', path2ban_get_default_paths_to_ban());
-    $list = $list . "\n";
-
-    // Check that the user hasn't already added them before adding.
-    foreach ($new_entries as $each_new_entry) {
-      if (FALSE === strpos($list, $each_new_entry)) {
-        $list .= $each_new_entry . "\n";
-      }
-    }
-
-    variable_set('path2ban_list', $list);
   }
 
 }

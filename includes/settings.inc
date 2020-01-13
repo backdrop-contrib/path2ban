@@ -66,18 +66,26 @@ function path2ban_settings() {
     '#default_value' => variable_get('path2ban_warn_user_message', 'Access to this page is restricted.<br/>If you continue to attempt to access it you will be blocked from this website.'),
     '#description' => t('The message to show the user if the "Warning message" box is checked.'),
   );
-  $form['path2ban_options']['path2ban_use_hooks'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Use hooks'),
-    '#default_value' => variable_get('path2ban_use_hooks', 0),
-    '#description' => t('Selecting this opption means that path2ban still works
-      even if other modules, or your own configuration, uses Drupal\'s 403 and
-      404 routes.<br/>If you enable this, don\'t forget to change those 403 and 404
-      options <a href="/admin/config/system/site-information">here</a>.
-      <br>path2ban\'s maintainers are actively seeking feedback on this change,
-      and invite you to leave comments and feedback
+
+  $form['path2ban_options']['path2ban_mode'] = array(
+    '#type' => 'radios',
+    '#title' => t('Mode'),
+    '#description' => t('path2ban\'s maintainers are actively seeking feedback
+        on this feature, and invite you to leave comments and feedback
       <a href=\'https://www.drupal.org/project/path2ban/issues/3103110\'>here</a>.'),
+    '#default_value' => variable_get('path2ban_mode', Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK),
+    '#options' => array(
+      Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK => t('Use the 403 
+        and 404 error pages (old). Choosing this will overwrite these settings. 
+        You can check what they are
+        <a href="/admin/config/system/site-information">here</a>.'),
+      Path2ban_SettingsManager::MODE_USE_HOOK => t('Use hooks (new). Selecting
+        this option means that path2ban will still work even if other modules,
+        or your own configuration, use Drupal\'s 403 and 404 routes.'),
+    ),
   );
+
+  $form['#submit'][] = 'path2ban_settings_form_submit';
 
   return system_settings_form($form);
 }
@@ -95,7 +103,7 @@ function path2ban_page_alter(&$page) {
   if (!user_access('administer path2ban')) {
     return;
   }
-  
+
   // Some sites disable watchdog.
   if (!module_exists('dblog')) {
     $page['content']['no_blog_warning'] = array(
@@ -132,4 +140,21 @@ function path2ban_page_alter(&$page) {
   );
 
   $page['content']['path2ban_error_list']['404_errors'] = dblog_top('page not found');
+}
+
+/**
+ * Implements settings form submit callback.
+ */
+function path2ban_settings_form_submit($form, &$form_state) {
+  // Only switch modes if there is a difference.
+  if ($form_state['values']['path2ban_mode'] != variable_get('path2ban_mode')) {
+    switch ($form_state['values']['path2ban_mode']) {
+      case Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK:
+        Path2ban_SettingsManager::switchToMenuCallbackMode();
+        break;
+      case Path2ban_SettingsManager::MODE_USE_HOOK:
+        Path2ban_SettingsManager::switchToHookMode();
+        break;
+    }
+  }
 }

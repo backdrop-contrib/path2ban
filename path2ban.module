@@ -39,7 +39,7 @@ function path2ban_mail($key, &$message, $params) {
  * for a lower order hook to be used.
  */
 function path2ban_page_build(&$page) {
-  if (!variable_get('path2ban_use_hooks', 0)) {
+  if (Path2ban_SettingsManager::MODE_USE_HOOK != variable_get('path2ban_mode', 0)) {
     return;
   }
 

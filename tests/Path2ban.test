@@ -80,9 +80,7 @@ class Path2banTests extends DrupalWebTestCase {
    * An end to end test of the Path2ban functionality using the 404 page.
    */
   public function testUserGetsBlockedUsing404() {
-    variable_set('path2ban_use_hooks', 0);
-    variable_set('site_403', 'path2ban/403');
-    variable_set('site_404', 'path2ban/404');
+    Path2ban_SettingsManager::switchToMenuCallbackMode();
     $this->coreTestUserGetsBlocked();
   }
 
@@ -90,9 +88,7 @@ class Path2banTests extends DrupalWebTestCase {
    * An end to end test of the Path2ban functionality using the hook.
    */
   public function testUserGetsBlockedUsingHook() {
-    variable_set('path2ban_use_hooks', 1);
-    variable_set('site_403', '');
-    variable_set('site_404', '');
+    Path2ban_SettingsManager::switchToHookMode();
     $this->coreTestUserGetsBlocked();
   }
 
@@ -103,9 +99,7 @@ class Path2banTests extends DrupalWebTestCase {
     variable_set('path2ban_threshold_window', 3600);
     variable_set('path2ban_threshold_limit', 1);
     variable_set('path2ban_notify', 0);
-    variable_set('path2ban_use_hooks', 1);
-    variable_set('site_403', '');
-    variable_set('site_404', '');
+    Path2ban_SettingsManager::switchToHookMode();
 
     variable_set('path2ban_banned_count', 0);
 
@@ -144,11 +138,11 @@ class Path2banTests extends DrupalWebTestCase {
    */
   public function testAddNewEntries() {
     variable_set('path2ban_list', '');
-    Path2ban::addNewEntries(array('new_entry'));
+    Path2ban_SettingsManager::addNewEntries(array('new_entry'));
     $this->assertEqual("\nnew_entry\n", variable_get('path2ban_list'));
 
     // Test for multiple additions, and that capitals get lower cased.
-    Path2ban::addNewEntries(array('new_entry', 'new_entry', 'new_entry'));
+    Path2ban_SettingsManager::addNewEntries(array('new_entry', 'new_entry', 'new_entry'));
     $this->assertEqual("\nnew_entry\n\n", variable_get('path2ban_list'));
   }
 
