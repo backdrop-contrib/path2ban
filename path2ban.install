@@ -27,7 +27,8 @@ function path2ban_install() {
  * Implements hook_enable().
  */
 function path2ban_enable() {
-  if (Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK == variable_get('path2ban_mode')) {
+  if (Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK == variable_get('path2ban_mode') ||
+    NULL == variable_get('path2ban_mode')) {
     Path2ban_SettingsManager::switchToMenuCallbackMode();
   }
 }
@@ -68,6 +69,9 @@ function path2ban_uninstall() {
  * use at the path2ban config page.
  */
 function path2ban_update_7101() {
+  // Rebuild the registry before using the new Path2ban_SettingsManager below.
+  registry_rebuild();
+
   $entries_to_add = array(
     'payload.php',
     'so.php',
@@ -148,17 +152,22 @@ function path2ban_update_7202() {
  *
  * Forces path2ban to use one of either using hooks or using the 403 and 404
  * pages. If you don't have the "use hooks" setting enabled, it uses the 403
- * and 404 pages. 
+ * and 404 pages.
  * Adds additional security settings based on recent hack attempts.
+ * Adds a much more thorough check for settings.php file snoopers.
  */
 function path2ban_update_7203() {
+
+  // Rebuild the registry before using the new Path2ban_SettingsManager below.
+  registry_rebuild();
+
   $entries_to_add = array(
     'elrekt.php',
     '_adminer',
     '_adminer.php',
     'accesson.php',
     'agentui.php',
-    '*.settings.php.swp',
+    '*settings.php*',
   );
 
   Path2ban_SettingsManager::addNewEntries($entries_to_add);
@@ -170,4 +179,7 @@ function path2ban_update_7203() {
     variable_set('path2ban_mode', Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK);
   }
   variable_del('path2ban_use_hooks');
+
+  return t('Your Path2ban settings have been updated. Please check the new
+    settings <a href="/admin/config/people/path2ban">here</a>.');
 }

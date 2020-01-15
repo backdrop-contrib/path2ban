@@ -86,8 +86,8 @@ abstract class Path2ban_SettingsManager {
           ),
           WATCHDOG_WARNING
         );
-        drupal_set_message("Your site 403 and 404 paths were overridden.\n The
-        old entries can be found in your watchdog log.");
+        drupal_set_message("Path2ban has overwritten your site 403 and 404
+          paths.\n The old entries can be found in your watchdog log.");
       }
       else {
         drupal_set_message('Your site 403 and 404 paths were overridden.');
