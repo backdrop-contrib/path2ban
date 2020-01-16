@@ -115,9 +115,10 @@ class Path2banTests extends DrupalWebTestCase {
    * in the configuration.
    */
   public function testDontBanValidPaths() {
-    variable_set('path2ban_use_hooks', 1);
-    variable_set('site_403', '');
-    variable_set('site_404', '');
+    Path2ban_SettingsManager::switchToHookMode();
+    variable_set('path2ban_threshold_window', 3600);
+    variable_set('path2ban_threshold_limit', 1);
+    variable_set('path2ban_notify', 0);
 
     variable_set('path2ban_banned_count', 0);
 
@@ -131,6 +132,29 @@ class Path2banTests extends DrupalWebTestCase {
       $this->singleTestUserGetsBlocked($path2ban_setting, $path_to_test);
       $this->assertEqual(0, variable_get('path2ban_banned_count'));
     }
+  }
+
+  /**
+   * Test that 403 Access Denied errors can also result in bans.
+   */
+  public function test403CanBan() {
+    Path2ban_SettingsManager::switchToHookMode();
+
+    variable_set('path2ban_threshold_window', 3600);
+    variable_set('path2ban_threshold_limit', 1);
+    variable_set('path2ban_notify', 0);
+
+    $testNode = $this->drupalCreateNode(array(
+      'title' => 'test403CanBan',
+    ));
+
+    variable_set('path2ban_banned_count', 0);
+
+    // Test the user doesn't get blocked for every 403.
+    $this->assertFalse($this->singleTestUserGetsBlocked('different403', 'node/' . $testNode->nid . '/edit'));
+
+    // Test the user gets blocked for 403 errors covered in rules.
+    $this->assertTrue($this->singleTestUserGetsBlocked('node/' . $testNode->nid . '*', 'node/' . $testNode->nid . '/edit'));
   }
 
   /**
