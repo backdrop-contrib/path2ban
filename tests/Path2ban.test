@@ -170,4 +170,19 @@ class Path2banTests extends DrupalWebTestCase {
     $this->assertEqual("\nnew_entry\n\n", variable_get('path2ban_list'));
   }
 
+  /**
+   * Make sure all these hooks always wok.
+   */
+  public function testInstallEnableUpdateDisableUninstall() {
+    module_invoke('path2ban', 'install');
+    $this->assertNotNull(variable_get('path2ban_mode'));
+    module_invoke('path2ban', 'enable');
+    $this->assertNotNull(variable_get('path2ban_mode'));
+    module_invoke('path2ban', 'update');
+    module_invoke('path2ban', 'disable');
+    $this->assertNull(variable_get('site_403'));
+    module_invoke('path2ban', 'uninstall');
+    $this->assertNull(variable_get('path2ban_mode'));
+  }
+
 }
