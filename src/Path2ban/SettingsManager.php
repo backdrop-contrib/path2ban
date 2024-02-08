@@ -21,7 +21,7 @@ abstract class Path2ban_SettingsManager {
    * @param array $new_entries
    */
   public static function addNewEntries($new_entries) {
-    $list = variable_get('path2ban_list', path2ban_get_default_paths_to_ban());
+    $list = config_get('path2ban.settings', 'list');
     $list = $list . "\n";
 
     // Check that the user hasn't already added them before adding.
@@ -31,21 +31,21 @@ abstract class Path2ban_SettingsManager {
       }
     }
 
-    variable_set('path2ban_list', $list);
+    config_set('path2ban.settings', 'list', $list);
   }
 
   /**
    * Switch to hook mode, clearing the site_403 and site_404 variables as we go.
    */
   public static function switchToHookMode() {
-    variable_set('path2ban_mode', self::MODE_USE_HOOK);
+    config_set('path2ban.settings', 'mode', self::MODE_USE_HOOK);
 
     // Wipe old path variables.
-    if ('path2ban/403' == variable_get('site_403')) {
-      variable_set('site_403', '');
+    if ('path2ban/403' == config_get('system.core', 'site_403')) {
+      config_set('system.core', 'site_403', '');
     }
-    if ('path2ban/404' == variable_get('site_404')) {
-      variable_set('site_404', '');
+    if ('path2ban/404' == config_get('system.core', 'site_404')) {
+      config_set('system.core', 'site_404', '');
     }
   }
 
@@ -54,27 +54,27 @@ abstract class Path2ban_SettingsManager {
    * be set.
    */
   public static function switchToMenuCallbackMode() {
-    variable_set('path2ban_mode', self::MODE_USE_MENU_CALLBACK);
+    config_set('path2ban.settings', 'mode', self::MODE_USE_MENU_CALLBACK);
 
     // Log what the old settings were.
-    $old_site_403 = variable_get('site_403');
-    $old_site_404 = variable_get('site_404');
+    $old_site_403 = config_get('system.core', 'site_403');
+    $old_site_404 = config_get('system.core', 'site_404');
 
     // Update the settings to the new values.
-    variable_set('site_403', 'path2ban/403');
-    variable_set('site_404', 'path2ban/404');
+    config_set('system.core', 'site_403', 'path2ban/403');
+    config_set('system.core', 'site_404', 'path2ban/404');
 
     // Show the user messages and log the old entries if needed.
-    $variables_changed = FALSE;
+    $config_changed = FALSE;
 
     if (!in_array($old_site_403, array('', 'path2ban/403'))) {
-      $variables_changed = TRUE;
+      $config_changed = TRUE;
     }
     if (!in_array($old_site_404, array('', 'path2ban/404'))) {
-      $variables_changed = TRUE;
+      $config_changed = TRUE;
     }
 
-    if (TRUE == $variables_changed) {
+    if (TRUE == $config_changed) {
       if (module_exists('dblog')) {
         watchdog(
           'path2ban',
@@ -82,18 +82,17 @@ abstract class Path2ban_SettingsManager {
             \'%old_site_403\' and site_404 was \'%old_site_404\'.',
           array(
             '%old_site_403' => $old_site_403,
-            '%old_site_404' => $old_site_404
+            '%old_site_404' => $old_site_404,
           ),
           WATCHDOG_WARNING
         );
-        drupal_set_message("Path2ban has overwritten your site 403 and 404
+        backdrop_set_message("Path2ban has overwritten your site 403 and 404
           paths.\n The old entries can be found in your watchdog log.");
       }
       else {
-        drupal_set_message('Your site 403 and 404 paths were overridden.');
+        backdrop_set_message('Your site 403 and 404 paths were overridden.');
       }
     }
-
   }
 
   /**
@@ -102,7 +101,7 @@ abstract class Path2ban_SettingsManager {
    */
   public static function checkRuntimeRequirements() {
 
-    $mode = variable_get('path2ban_mode');
+    $mode = config_get('path2ban.settings', 'mode');
 
     $return_values = array('path2ban_mode_check' => array('title' => 'Path2ban mode'));
 
@@ -115,8 +114,8 @@ abstract class Path2ban_SettingsManager {
       $return_values['path2ban_mode_check']['severity'] = REQUIREMENT_OK;
 
       // Check the site_403 and site_404 variables.
-      $site_current_403 = variable_get('site_403');
-      $site_current_404 = variable_get('site_404');
+      $site_current_403 = config_get('system.settings', 'site_403');
+      $site_current_404 = config_get('system.settings', 'site_404');
 
       $value = t('site_403: :site_current_403 site_404: :site_current_404',
         array(

@@ -20,7 +20,7 @@ function path2ban_menu() {
   $menu['admin/config/people/path2ban'] = array(
     'title' => 'path2ban',
     'description' => 'Ban IP of visitors, who try to scan restricted paths.',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('path2ban_settings'),
     'access arguments' => array('administer path2ban'),
     'type' => MENU_NORMAL_ITEM,

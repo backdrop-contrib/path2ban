@@ -9,6 +9,27 @@ module_load_include('inc', 'path2ban', 'includes/menu');
 module_load_include('inc', 'path2ban', 'includes/settings');
 
 /**
+ * Implements hook_autoload_info().
+ */
+function path2ban_autoload_info() {
+  return array(
+    'Path2ban' => 'src/Path2ban.php',
+    'Path2ban_SettingsManager' => 'src/Path2ban/SettingsManager.php',
+  );
+}
+
+/**
+ * Implements hook_config_info().
+ */
+function path2ban_config_info() {
+  $prefixes['path2ban.settings'] = array(
+    'label' => t('Path2ban settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Implements hook_permission().
  */
 function path2ban_permission() {
@@ -33,13 +54,13 @@ function path2ban_mail($key, &$message, $params) {
 }
 
 /**
- * Implements hook_page_build().
+ * Implements hook_preprocess_page().
  *
- * In this module's current implementation too many Drupal libraries are needed
- * for a lower order hook to be used.
+ * In this module's current implementation too many Backdrop libraries are
+ * needed for a lower order hook to be used.
  */
-function path2ban_page_build(&$page) {
-  if (Path2ban_SettingsManager::MODE_USE_HOOK != variable_get('path2ban_mode', 0)) {
+function path2ban_preprocess_page(&$variables) {
+  if (Path2ban_SettingsManager::MODE_USE_HOOK != config_get('path2ban.settings', 'mode')) {
     return;
   }
 

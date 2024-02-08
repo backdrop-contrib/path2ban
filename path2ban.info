@@ -1,11 +1,7 @@
 name = path2ban
 description = IP ban users or bots who try to access paths you restrict.
-core = 7.x
+backdrop = 1.x
+package = Security
 configure = admin/config/people/path2ban
-version = "7.x-2.3"
 
-files[] = src/Path2ban.php
-files[] = src/Path2ban/SettingsManager.php
-
-testing_api = 2.x
-files[] = tests/Path2ban.test
+dependencies[] = ip_blocking

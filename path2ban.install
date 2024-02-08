@@ -6,29 +6,19 @@
  */
 
 /**
- * This function prevents us from needing to have the same configuration
- * repeated multiple times.
- */
-function path2ban_get_default_paths_to_ban() {
-  return file_get_contents(drupal_get_path('module', 'path2ban') . '/path2ban_default_entries.config');
-}
-
-/**
  * Implements hook_install().
  */
 function path2ban_install() {
-  variable_set('path2ban_list', variable_get('path2ban_list', path2ban_get_default_paths_to_ban()));
-  variable_set('path2ban_banned_count', 0);
-  variable_set('path2ban_banned_since', time());
-  variable_set('path2ban_mode', Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK);
+  state_set('path2ban_banned_count', 0);
+  state_set('path2ban_banned_since', time());
 }
 
 /**
  * Implements hook_enable().
  */
 function path2ban_enable() {
-  if (Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK == variable_get('path2ban_mode') ||
-    NULL == variable_get('path2ban_mode')) {
+  if (Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK == config_get('path2ban.settings', 'mode') ||
+    NULL == config_get('path2ban.settings', 'mode')) {
     Path2ban_SettingsManager::switchToMenuCallbackMode();
   }
 }
@@ -36,14 +26,14 @@ function path2ban_enable() {
 /**
  * Implements hook_disable().
  *
- * If the site_403 and site_404 pages have been overwritten, delete the entries.
+ * If the site_403 and site_404 pages have been overwritten, clear the entries.
  */
 function path2ban_disable() {
-  if ('path2ban/403' == variable_get('site_403')) {
-    variable_del('site_403');
+  if ('path2ban/403' == config_get('system.core', 'site_403')) {
+    config_set('system.core', 'site_403', '');
   }
-  if ('path2ban/404' == variable_get('site_404')) {
-    variable_del('site_404');
+  if ('path2ban/404' == config_get('system.core', 'site_404')) {
+    config_set('system.core', 'site_404', '');
   }
 }
 
@@ -51,135 +41,39 @@ function path2ban_disable() {
  * Implements hook_uninstall().
  */
 function path2ban_uninstall() {
-  variable_del('path2ban_list');
-  variable_del('path2ban_threshold_limit');
-  variable_del('path2ban_threshold_window');
-  variable_del('path2ban_notify');
-  variable_del('path2ban_warn_user');
-  variable_del('path2ban_warn_user_message');
-  variable_del('path2ban_banned_count');
-  variable_del('path2ban_banned_since');
-  variable_del('path2ban_mode');
+  state_del('path2ban_banned_count');
+  state_del('path2ban_banned_since');
 }
 
 /**
- * Implements hook_update_N().
- *
- * Add paths to prevent attacks encountered during Drupalgeddon 2. Review before
- * use at the path2ban config page.
+ * Implements hook_update_last_removed().
  */
-function path2ban_update_7101() {
-  // Rebuild the registry before using the new Path2ban_SettingsManager below.
-  registry_rebuild();
-
-  $entries_to_add = array(
-    'payload.php',
-    'so.php',
-    'formas.php',
-    'aul.php',
-    'rxr.php',
-    'wp-caches.php',
-    'sec.php',
-    'alpha.php',
-    'u.php',
-    'searchreplacedb2.php',
-    'd7.php',
-    '_.php',
-    'pplugins.php',
-
-    '*.sql',
-    '*.swf',
-    '*config.php',
-    '*.wsf',
-    '*.ssh',
-  );
-
-  Path2ban_SettingsManager::addNewEntries($entries_to_add);
+function path2ban_update_last_removed() {
+  return 7203;
 }
 
 /**
- * Implements hook_update_N().
- *
- * Added some suggestions from toriah at
- * https://www.drupal.org/project/path2ban/issues/2456909. Review before use at
- * the path2ban config page.
+ * Convert variables to configuration.
  */
-function path2ban_update_7201() {
-  $entries_to_add = array(
-    'wp/wp-*',
-    'wordpress/wp-*',
-
-    '*.asp',
-    '*.cgi',
-    '*.jsp',
-    '*.inc.php',
-    '*.php.html',
-    '*.phps',
-
-    '*UNION ALL SELECT*',
-    '*SELECT DBMS_PIPE.RECEIVE_MESSAGE*',
-    '*SELECT SLEEP(*',
-    '*SELECT PG_SLEEP(*',
-    '*(SELECT (*',
-    '*SELECT COUNT(*',
-  );
-
-  Path2ban_SettingsManager::addNewEntries($entries_to_add);
-}
-
-/**
- * Implements hook_update_N().
- *
- * Add additional security settings.
- * Adds new settings to manage the count of banned visitors.
- * Deletes the now defunct variable 'path2ban_test_mode'.
- */
-function path2ban_update_7202() {
-  variable_del('path2ban_test_mode');
-
-  variable_set('path2ban_banned_count', 0);
-  variable_set('path2ban_banned_since', time());
-
-  $entries_to_add = array(
-    '.settings.php.swp',
-  );
-
-  Path2ban_SettingsManager::addNewEntries($entries_to_add);
-}
-
-/**
- * Implements hook_update_N().
- *
- * Forces path2ban to use one of either using hooks or using the 403 and 404
- * pages. If you don't have the "use hooks" setting enabled, it uses the 403
- * and 404 pages.
- * Adds additional security settings based on recent hack attempts.
- * Adds a much more thorough check for settings.php file snoopers.
- */
-function path2ban_update_7203() {
-
-  // Rebuild the registry before using the new Path2ban_SettingsManager below.
-  registry_rebuild();
-
-  $entries_to_add = array(
-    'elrekt.php',
-    '_adminer',
-    '_adminer.php',
-    'accesson.php',
-    'agentui.php',
-    '*settings.php*',
-  );
-
-  Path2ban_SettingsManager::addNewEntries($entries_to_add);
-
-  if (1 == variable_get('path2ban_use_hooks')) {
-    Path2ban_SettingsManager::switchToHookMode();
-  }
-  else {
-    variable_set('path2ban_mode', Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK);
-  }
-  variable_del('path2ban_use_hooks');
-
-  return t('Your Path2ban settings have been updated. Please check the new
-    settings <a href="/admin/config/people/path2ban">here</a>.');
+function path2ban_update_1000() {
+  state_set('path2ban_banned_count', update_variable_get('path2ban_banned_count', 0));
+  state_set('path2ban_banned_since', update_variable_get('path2ban_banned_since', time()));
+  $config = config('path2ban.settings');
+  $config->set('list', update_variable_get('path2ban_list', ''));
+  $config->set('threshold_limit', update_variable_get('path2ban_threshold_limit', 5));
+  $config->set('threshold_window', update_variable_get('path2ban_threshold_window', 3600));
+  $config->set('notify', update_variable_get('path2ban_notify', 0));
+  $config->set('warn_user', update_variable_get('path2ban_warn_user', 0));
+  $config->set('warn_user_message', update_variable_get('path2ban_warn_user_message', 'Access to this page is restricted. <br> if you continue to attempt to access it you will be blocked from this website.'));
+  $config->set('mode', update_variable_get('path2ban_mode', Path2ban_SettingsManager::MODE_USE_MENU_CALLBACK));
+  $config->save();
+  update_variable_del('path2ban_banned_count');
+  update_variable_del('path2ban_banned_since');
+  update_variable_del('path2ban_list');
+  update_variable_del('path2ban_threshold_limit');
+  update_variable_del('path2ban_threshold_window');
+  update_variable_del('path2ban_notify');
+  update_variable_del('path2ban_warn_user');
+  update_variable_del('path2ban_warn_user_message');
+  update_variable_del('path2ban_mode');
 }

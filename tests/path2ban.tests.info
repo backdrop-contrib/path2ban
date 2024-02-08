@@ -1,0 +1,5 @@
+[Path2banTests]
+name = Path2ban unit tests
+description = Test core Path2ban functionality.
+group = Path2ban
+file = path2ban.test

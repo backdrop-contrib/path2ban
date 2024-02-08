@@ -8,24 +8,13 @@
 /**
  * @class Contains Path2ban tests.
  */
-class Path2banTests extends DrupalWebTestCase {
+class Path2banTests extends BackdropWebTestCase {
 
   /**
    * Make sure the path2ban module functionality is available.
    */
   public function setUp() {
     parent::setUp('path2ban');
-  }
-
-  /**
-   * Standard function to provide text for the Web Interface.
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Path2ban unit tests',
-      'description' => 'Test Path2ban\'s core functionality.',
-      'group' => 'Path2ban',
-    );
   }
 
   /**
@@ -37,9 +26,9 @@ class Path2banTests extends DrupalWebTestCase {
    * @return bool $user_was_blocked
    */
   private function singleTestUserGetsBlocked($path2ban_setting, $path_to_test) {
-    variable_set('path2ban_list', $path2ban_setting);
+    config_set('path2ban.settings', 'list', $path2ban_setting);
 
-    $this->drupalGet($path_to_test);
+    $this->backdropGet($path_to_test);
 
     // At this point, the user should be blocked.
     $ip_is_blocked = db_select('blocked_ips')->fields('blocked_ips', array('ip'))->execute()->fetchAssoc();
@@ -55,9 +44,9 @@ class Path2banTests extends DrupalWebTestCase {
    * Contained in tests for blocking by both the 404 page and the hook.
    */
   private function coreTestUserGetsBlocked() {
-    variable_set('path2ban_threshold_window', 3600);
-    variable_set('path2ban_threshold_limit', 1);
-    variable_set('path2ban_notify', 0);
+    config_set('path2ban.settings', 'threshold_window', 3600);
+    config_set('path2ban.settings', 'threshold_limit', 1);
+    config_set('path2ban.settings', 'notify', 0);
 
     // Array of the form 'setting' => 'path to test'.
     $setting_path_map = array(
@@ -96,18 +85,18 @@ class Path2banTests extends DrupalWebTestCase {
    * Test the path2ban_count variable increases on each ban.
    */
   public function testBannedCountIncrease() {
-    variable_set('path2ban_threshold_window', 3600);
-    variable_set('path2ban_threshold_limit', 1);
-    variable_set('path2ban_notify', 0);
+    config_set('path2ban.settings', 'threshold_window', 3600);
+    config_set('path2ban.settings', 'threshold_limit', 1);
+    config_set('path2ban.settings', 'notify', 0);
     Path2ban_SettingsManager::switchToHookMode();
 
-    variable_set('path2ban_banned_count', 0);
+    state_set('path2ban_banned_count', 0);
 
     $this->assertTrue($this->singleTestUserGetsBlocked('wp-login.php', 'wp-login.php'));
     $this->assertTrue($this->singleTestUserGetsBlocked('wp-login.php', 'wp-login.php'));
     $this->assertTrue($this->singleTestUserGetsBlocked('wp-login.php', 'wp-login.php'));
 
-    $this->assertEqual(3, variable_get('path2ban_banned_count'));
+    $this->assertEqual(3, state_get('path2ban_banned_count'));
   }
 
   /**
@@ -116,11 +105,11 @@ class Path2banTests extends DrupalWebTestCase {
    */
   public function testDontBanValidPaths() {
     Path2ban_SettingsManager::switchToHookMode();
-    variable_set('path2ban_threshold_window', 3600);
-    variable_set('path2ban_threshold_limit', 1);
-    variable_set('path2ban_notify', 0);
+    config_set('path2ban.settings', 'threshold_window', 3600);
+    config_set('path2ban.settings', 'threshold_limit', 1);
+    config_set('path2ban.settings', 'notify', 0);
 
-    variable_set('path2ban_banned_count', 0);
+    state_set('path2ban_banned_count', 0);
 
     $setting_path_map = array(
       'user/*' => 'user/login',
@@ -130,7 +119,7 @@ class Path2banTests extends DrupalWebTestCase {
 
     foreach($setting_path_map as $path2ban_setting => $path_to_test) {
       $this->singleTestUserGetsBlocked($path2ban_setting, $path_to_test);
-      $this->assertEqual(0, variable_get('path2ban_banned_count'));
+      $this->assertEqual(0, state_get('path2ban_banned_count'));
     }
   }
 
@@ -140,15 +129,15 @@ class Path2banTests extends DrupalWebTestCase {
   public function test403CanBan() {
     Path2ban_SettingsManager::switchToHookMode();
 
-    variable_set('path2ban_threshold_window', 3600);
-    variable_set('path2ban_threshold_limit', 1);
-    variable_set('path2ban_notify', 0);
+    config_set('path2ban.settings', 'threshold_window', 3600);
+    config_set('path2ban.settings', 'threshold_limit', 1);
+    config_set('path2ban.settings', 'notify', 0);
 
-    $testNode = $this->drupalCreateNode(array(
+    $testNode = $this->backdropCreateNode(array(
       'title' => 'test403CanBan',
     ));
 
-    variable_set('path2ban_banned_count', 0);
+    state_set('path2ban_banned_count', 0);
 
     // Test the user doesn't get blocked for every 403.
     $this->assertFalse($this->singleTestUserGetsBlocked('different403', 'node/' . $testNode->nid . '/edit'));
@@ -161,28 +150,28 @@ class Path2banTests extends DrupalWebTestCase {
    * Tests the addNewEntries function.
    */
   public function testAddNewEntries() {
-    variable_set('path2ban_list', '');
+    config_set('path2ban.settings', 'list', '');
     Path2ban_SettingsManager::addNewEntries(array('new_entry'));
-    $this->assertEqual("\nnew_entry\n", variable_get('path2ban_list'));
+    $this->assertEqual("\nnew_entry\n", config_get('path2ban.settings', 'list'));
 
-    // Test for multiple additions, and that capitals get lower cased.
+    // Test for multiple additions, and that capitals get lower-cased.
     Path2ban_SettingsManager::addNewEntries(array('new_entry', 'new_entry', 'new_entry'));
-    $this->assertEqual("\nnew_entry\n\n", variable_get('path2ban_list'));
+    $this->assertEqual("\nnew_entry\n\n", config_get('path2ban.settings', 'list'));
   }
 
   /**
-   * Make sure all these hooks always wok.
+   * Make sure all these hooks always work.
    */
   public function testInstallEnableUpdateDisableUninstall() {
     module_invoke('path2ban', 'install');
-    $this->assertNotNull(variable_get('path2ban_mode'));
+    $this->assertNotNull(config_get('path2ban.settings', 'mode'));
     module_invoke('path2ban', 'enable');
-    $this->assertNotNull(variable_get('path2ban_mode'));
+    $this->assertNotNull(config_get('path2ban.settings', 'mode'));
     module_invoke('path2ban', 'update');
     module_invoke('path2ban', 'disable');
-    $this->assertNull(variable_get('site_403'));
+    $this->assertNull(config_get('system.settings', 'site_403'));
     module_invoke('path2ban', 'uninstall');
-    $this->assertNull(variable_get('path2ban_mode'));
+    $this->assertNull(config_get('path2ban.settings', 'mode'));
   }
 
 }

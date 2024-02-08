@@ -1,0 +1,10 @@
+{
+  "_config_name": "path2ban.settings",
+  "list": "wp-*\r\nbitrix*\r\nnetcat*\r\nfck*\r\ncomponents*\r\nwww.zip\r\nbackup.zip\r\npublic_html.zip\r\n*.tar.gz\r\n\r\nadministrator*\r\nadmin.php\r\nadmin/index.php\r\nadmin/login.php\r\n\r\nsys*\r\nold*\r\nmanage*\r\neditor*\r\nwebadmin*\r\nphpMyAdmin*\r\n\r\n*.cgi\r\ncgi*\r\nwso*\r\n\r\npayload.php\r\nso.php\r\nformas.php\r\naul.php\r\nrxr.php\r\nwp-caches.php\r\nsec.php\r\nalpha.php\r\nu.php\r\nsearchreplacedb2.php\r\nd7.php\r\n_.php\r\npplugins.php\r\n\r\n*.sql\r\n*.swf\r\n*config.php\r\n*.wsf\r\n*.ssh\r\n\r\nwp/wp-*\r\nwordpress/wp-*\r\n\r\n*.asp\r\n*.cgi\r\n*.jsp\r\n*.inc.php\r\n*.php.html\r\n*.phps\r\n\r\n*UNION ALL SELECT*\r\n*SELECT DBMS_PIPE.RECEIVE_MESSAGE*\r\n*SELECT SLEEP(*\r\n*SELECT PG_SLEEP(*\r\n*(SELECT (*\r\n*SELECT COUNT(*\r\n\r\n*settings.php*\r\n\r\nelrekt.php\r\n_adminer\r\n_adminer.php\r\naccesson.php\r\nagentui.php",
+  "threshold_limit": 5,
+  "threshold_window": 3600,
+  "notify": 0,
+  "mode": 1,
+  "warn_user": 0,
+  "warn_user_message": "Access to this page is restricted.<br>If you continue to attempt to access it you will be blocked from this website."
+}
