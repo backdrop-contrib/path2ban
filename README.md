@@ -1,5 +1,10 @@
 # Path2Ban
 
+> [!IMPORTANT]
+> This module is not fully ported or tested. [AntiScan](https://backdropcms.org/project/antiscan)
+> is an alternative implementation of this functionality and is actively
+> maintained, so consider using that instead.
+
 The Path2Ban module allows you to block web scanner attacks from individual IP
 addresses. The module has an editable list of restricted paths. All attempts to
 scan a restricted path will be logged:
@@ -36,13 +41,11 @@ one hour (3600 seconds).
 
 ## Current Maintainers
 
- - [Laryn Kragt Bakker](https://github.com/laryn).
- - Seeking co-maintainers
+ - Seeking maintainers
 
 ## Credits
 
  - Ported to Backdrop CMS by [Laryn Kragt Bakker](https://github.com/laryn).
- - Backdrop development is supported by [Aten Design Group](https://aten.io).
  - Maintainers on drupal.org include [ivan-simonov](https://www.drupal.org/u/ivan-simonov)
    and [civifirst-john](https://www.drupal.org/u/civifirst-john).
 
