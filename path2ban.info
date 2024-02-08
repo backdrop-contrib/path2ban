@@ -1,6 +1,7 @@
 name = path2ban
 description = IP ban users or bots who try to access paths you restrict.
 backdrop = 1.x
+type = module
 package = Security
 configure = admin/config/people/path2ban
 
