@@ -54,13 +54,11 @@ function path2ban_mail($key, &$message, $params) {
 }
 
 /**
- * Implements hook_preprocess_page().
- *
- * In this module's current implementation too many Backdrop libraries are
- * needed for a lower order hook to be used.
+ * Implements hook_init().
  */
-function path2ban_preprocess_page(&$variables) {
-  if (Path2ban_SettingsManager::MODE_USE_HOOK != config_get('path2ban.settings', 'mode')) {
+function path2ban_init() {
+  $mode = intval(config_get('path2ban.settings', 'mode'));
+  if (Path2ban_SettingsManager::MODE_USE_HOOK != $mode) {
     return;
   }
 

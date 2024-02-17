@@ -19,19 +19,16 @@ abstract class Path2ban {
    */
   public static function destinationCheck() {
     // Convert the Backdrop path to lowercase.
-    $destination = '';
-    if (array_key_exists('destination', $_GET)) {
-      $destination = backdrop_strtolower($_GET['destination']);
-    }
+    $current_path = backdrop_strtolower(current_path());
 
     // Don't accidentally error because of an empty string.
-    if (empty($destination)) {
+    if (empty($current_path)) {
       return FALSE;
     }
 
     // Compare the lowercase paths.
     $pages = backdrop_strtolower(config_get('path2ban.settings', 'list'));
-    $page_match = backdrop_match_path($destination, $pages);
+    $page_match = backdrop_match_path($current_path, $pages);
 
     if (!$page_match) {
       return FALSE;
@@ -43,7 +40,7 @@ abstract class Path2ban {
       return FALSE;
     }
 
-    self::blockUser($destination);
+    self::blockUser($current_path);
     return TRUE;
   }
 
@@ -87,12 +84,12 @@ abstract class Path2ban {
    * This function bans IP addresses of web scanners and sends a notification
    * email to User One.
    */
-  private static function blockUser($destination = '') {
+  private static function blockUser($current_path = '') {
     $config = config('path2ban.settings');
     // Actually ban.
     $ip = ip_address();
-    $reason = t('Path2Ban: Most recent attempt was %destination', array(
-      '%destination' => $destination,
+    $reason = t('Path2Ban: Most recent attempt was %path', array(
+      '%path' => $current_path,
     ));
     ip_blocking_block_ip($ip, $reason, 'path2ban');
 
@@ -108,11 +105,11 @@ abstract class Path2ban {
       $params['body'][] = t("Hi User One,
         There were suspected web-scanner activities.
         Associated IP (@ip) has been blocked.
-        The most recent attempt was @destination.
+        The most recent attempt was @path.
         You can review the list of blocked IPs at @url
         Thank you.
         Sent by path2ban module.
-      ", array('@ip' => $ip, '@destination' => $destination, '@url' => $url));
+      ", array('@ip' => $ip, '@path' => $current_path, '@url' => $url));
       backdrop_mail('path2ban', 'blocked-ip', $user1->mail, user_preferred_language($user1), $params);
     }
   }
